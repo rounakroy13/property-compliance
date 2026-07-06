@@ -31,9 +31,6 @@ export abstract class BaseAgent {
     this.config = config;
   }
 
-  /**
-   * Initialize the agent with necessary resources
-   */
   async initialize(): Promise<void> {
     console.log(`[${this.config.name}] Initializing agent...`);
     await this.onInitialize();
@@ -41,21 +38,15 @@ export abstract class BaseAgent {
     console.log(`[${this.config.name}] Agent initialized successfully`);
   }
 
-  /**
-   * Override this method to perform custom initialization
-   */
   protected abstract onInitialize(): Promise<void>;
 
-  /**
-   * Execute a task with the agent
-   */
   async execute(input: Record<string, unknown>): Promise<AgentTask> {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
     const task: AgentTask = {
-      id: uuidv4(),
+      id: generateId(),
       agentType: this.agentType,
       input,
       status: 'pending',
@@ -84,9 +75,6 @@ export abstract class BaseAgent {
     return task;
   }
 
-  /**
-   * Execute the task with retry logic
-   */
   private async executeWithRetry(input: Record<string, unknown>): Promise<AgentTaskResult> {
     let lastError: Error | null = null;
     
@@ -103,7 +91,7 @@ export abstract class BaseAgent {
         console.warn(`[${this.config.name}] Attempt ${attempt} failed:`, lastError.message);
         
         if (attempt < this.config.maxRetries) {
-          await this.delay(Math.pow(2, attempt) * 1000); // Exponential backoff
+          await this.delay(Math.pow(2, attempt) * 1000);
         }
       }
     }
@@ -111,30 +99,18 @@ export abstract class BaseAgent {
     throw lastError || new Error('Task failed after all retries');
   }
 
-  /**
-   * Override this method to implement the agent's processing logic
-   */
   protected abstract process(input: Record<string, unknown>): Promise<AgentTaskResult>;
 
-  /**
-   * Create a timeout promise
-   */
   private timeout(ms: number): Promise<never> {
     return new Promise((_, reject) => {
       setTimeout(() => reject(new Error(`Task timed out after ${ms}ms`)), ms);
     });
   }
 
-  /**
-   * Delay helper
-   */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Get agent info
-   */
   getInfo(): AgentConfig & { type: AgentType; initialized: boolean } {
     return {
       ...this.config,
@@ -143,13 +119,7 @@ export abstract class BaseAgent {
     };
   }
 
-  /**
-   * Generate reasoning explanation for the result
-   */
-  protected generateReasoning(
-    findings: string[],
-    conclusion: string
-  ): string {
+  protected generateReasoning(findings: string[], conclusion: string): string {
     const reasoning = [
       `## Analysis by ${this.config.name}`,
       '',
@@ -159,27 +129,19 @@ export abstract class BaseAgent {
       '### Conclusion:',
       conclusion,
     ];
-    
     return reasoning.join('\n');
   }
 
-  /**
-   * Format recommendations
-   */
   protected formatRecommendations(
     items: Array<{ priority: 'high' | 'medium' | 'low'; action: string }>
   ): string[] {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    
     return items
       .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
       .map(item => `[${item.priority.toUpperCase()}] ${item.action}`);
   }
 }
 
-/**
- * Agent Factory for creating agent instances
- */
 export class AgentFactory {
   private static agents: Map<AgentType, BaseAgent> = new Map();
 

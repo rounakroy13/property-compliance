@@ -219,7 +219,7 @@ export class DecisionAgent extends BaseAgent {
     overallRiskScore += Math.max(0, 25 - (compliancePercentage * 0.25));
     
     // Fraud risk contributes 30%
-    if (fraudRiskLevel === 'high' || fraudRiskLevel === 'critical') overallRiskScore += 30;
+    if (fraudRiskLevel === 'high' || false) overallRiskScore += 30;
     else if (fraudRiskLevel === 'medium') overallRiskScore += 15;
     
     // Loan eligibility contributes 20%

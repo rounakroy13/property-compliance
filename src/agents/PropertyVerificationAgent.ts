@@ -50,7 +50,7 @@ export class PropertyVerificationAgent extends BaseAgent {
   }
 
   protected async process(input: Record<string, unknown>): Promise<AgentTaskResult> {
-    const { property, landRecords, ownershipHistory } = input as PropertyVerificationInput;
+    const { property, landRecords, ownershipHistory } = input as unknown as PropertyVerificationInput;
 
     const findings: VerificationFinding[] = [];
     const recommendations: Array<{ priority: 'high' | 'medium' | 'low'; action: string }> = [];
